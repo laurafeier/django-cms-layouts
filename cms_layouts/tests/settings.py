@@ -13,15 +13,18 @@ INSTALLED_APPS = [
     'menus',
     'south',
     'sekizai',
+    'cms.plugins.text',
     'cms_layouts',
+    'cms_layouts.tests',
 ]
 
-CMS_TEMPLATES = [('cms_mock_template.html', 'cms_mock_template.html')]
-CMS_MODERATOR = True
+CMS_TEMPLATES = [('page_template.html', 'page_template.html')]
+CMS_MODERATOR = False
 CMS_PERMISSION = True
 STATIC_ROOT = '/static/'
 STATIC_URL = '/static/'
 ROOT_URLCONF = 'cms_layouts.tests.urls'
+
 TEMPLATE_CONTEXT_PROCESSORS = [
     "django.contrib.auth.context_processors.auth",
     'django.contrib.messages.context_processors.messages',
@@ -51,12 +54,18 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+
+    'cms.middleware.page.CurrentPageMiddleware',
+    'cms.middleware.user.CurrentUserMiddleware',
+    'cms.middleware.toolbar.ToolbarMiddleware',
 )
+
 TEMPLATE_LOADERS = (
     'cms_layouts.tests.utils.MockLoader',
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
     )
+
 CACHE_BACKEND = 'locmem:///'
 
 SOUTH_TESTS_MIGRATE = False

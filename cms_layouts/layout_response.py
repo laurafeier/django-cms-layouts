@@ -53,18 +53,15 @@ class LayoutResponse:
         placeholder_cache = {page.pk: {}, }
         # TODO maybe memoize this func call
         slots = get_placeholders(page.get_template())
-        original_slots = {
-            phd.slot: phd
-            for phd in page.placeholders.filter(slot__in=slots)}
 
         overwritten_slots = {
             phd.slot: phd
             for phd in self.layout.hidden_placeholders.filter(
                 slot__in=slots, cmsplugin__isnull=False)}
 
-        for slot in slots:
-            placeholder = (overwritten_slots.get(slot, None) or
-                           original_slots.get(slot, None))
+        for original_phd in page.placeholders.filter(slot__in=slots):
+            slot = original_phd.slot
+            placeholder = overwritten_slots.get(slot, None) or original_phd
             setattr(placeholder, 'page', page)
             self._cache_plugins_for_placeholder(placeholder)
             placeholder_cache[page.pk][slot] = placeholder

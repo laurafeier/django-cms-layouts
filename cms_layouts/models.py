@@ -61,6 +61,12 @@ class Layout(models.Model):
             return self.content_object.get_title_obj()
         return LayoutTitle
 
+    def __unicode__(self):
+        _type = 'Inherited from page'
+        if self.hidden_placeholders:
+            _type = 'Custom from page'
+        return "<%s - %s>" % (_type, self.from_page)
+
 
 class LayoutPlaceholder(models.Model):
     # instead of inheriting Placeholder and having to deal with all the

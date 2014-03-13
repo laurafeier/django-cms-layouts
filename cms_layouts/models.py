@@ -77,3 +77,8 @@ class LayoutPlaceholder(models.Model):
     #   when this layout does not have all placeholder slots defined then the
     #   ones from the linked page will be rendered
     layout = models.ForeignKey(Layout, related_name='placeholders')
+
+    def delete(self):
+        holder_id = self.holder.id
+        super(LayoutPlaceholder, self).delete()
+        Placeholder.objects.filter(id=holder_id).delete()

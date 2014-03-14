@@ -31,6 +31,11 @@ class LayoutResponse:
             if not isinstance(placeholder, Placeholder):
                 raise HttpResponseNotFound(
                     "<h1>Cannot find content for this layout</h1>")
+            # if content object has some custom html, make it available for
+            #   the context procecessor
+            if hasattr(self.content_object, 'extra_html_content'):
+                extra_html = self.content_object.extra_html_content
+                setattr(placeholder, '_extra_html', extra_html)
             return placeholder
         return Placeholder()
 

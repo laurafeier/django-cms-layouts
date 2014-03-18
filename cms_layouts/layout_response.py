@@ -7,7 +7,7 @@ from cms.models.placeholdermodel import Placeholder
 from cms.utils import get_template_from_request
 from cms.utils.plugins import get_placeholders
 from cms.plugins.utils import get_plugins
-from .helpers import get_content_slot
+from .slot_finder import get_fixed_section_slots, MissingRequiredPlaceholder
 
 
 class LayoutResponse:
@@ -24,20 +24,27 @@ class LayoutResponse:
             return self.content_object.get_title_obj()
         return self.layout.get_title_obj()
 
-    def _fill_content(self):
-        if hasattr(self.content_object, 'content'):
-            # content needs to be a placeholder instance
-            placeholder = self.content_object.content
-            if not isinstance(placeholder, Placeholder):
-                raise HttpResponseNotFound(
-                    "<h1>Cannot find content for this layout</h1>")
-            # if content object has some custom html, make it available for
-            #   the context procecessor
-            if hasattr(self.content_object, 'extra_html_content'):
-                extra_html = self.content_object.extra_html_content
-                setattr(placeholder, '_extra_html', extra_html)
-            return placeholder
-        return Placeholder()
+    def _get_fixed_slots(self, slots):
+        fixed_content = {}
+        fixed_sections = get_fixed_section_slots(slots)
+        # section_name need to be propeties named header/content and need to
+        #   return a placeholder instance
+        for section_name, slot_found in fixed_sections.items():
+            if hasattr(self.content_object, section_name):
+                # get content/header placeholder
+                placeholder = getattr(self.content_object, section_name)
+                if not isinstance(placeholder, Placeholder):
+                    raise HttpResponseNotFound(
+                        "<h1>Cannot find content for this layout</h1>")
+                # get extra html for header/content
+                extra_html_attr = 'extra_html_%s' % section_name
+                if hasattr(self.content_object, extra_html_attr):
+                    extra_html = getattr(self.content_object, extra_html_attr)
+                    setattr(placeholder, '_extra_html', extra_html)
+            else:
+                placeholder = Placeholder()
+            fixed_content[slot_found] = placeholder
+        return fixed_content
 
     def _cache_plugins_for_placeholder(self, placeholder):
         """
@@ -64,15 +71,17 @@ class LayoutResponse:
             for phd in self.layout.hidden_placeholders.filter(
                 slot__in=slots, cmsplugin__isnull=False)}
 
+        # fixed placeholders(header/content)
+        fixed_placeholders = self._get_fixed_slots(slots)
+
         for original_phd in page.placeholders.filter(slot__in=slots):
             slot = original_phd.slot
-            placeholder = overwritten_slots.get(slot, None) or original_phd
+            placeholder = (fixed_placeholders.get(slot, None) or
+                           overwritten_slots.get(slot, None) or
+                           original_phd)
             setattr(placeholder, 'page', page)
             self._cache_plugins_for_placeholder(placeholder)
             placeholder_cache[page.pk][slot] = placeholder
-        # set placeholder content
-        content_slot = get_content_slot(slots)
-        placeholder_cache[page.pk][content_slot] = self._fill_content()
         setattr(page, '_tmp_placeholders_cache', placeholder_cache)
         return page
 
@@ -90,7 +99,11 @@ class LayoutResponse:
         return current_page
 
     def make_response(self):
-        current_page = self._prepare_page_for_context()
+        try:
+            current_page = self._prepare_page_for_context()
+        except MissingRequiredPlaceholder, e:
+            return HttpResponseNotFound(
+                "<h1>Layout is missing placeholder %s</h1>" % e.slot)
         # don't allow cms toolbar
         setattr(self.request, 'toolbar', False)
         setattr(self.request, 'current_page', current_page)

@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
+from django.db.models import signals
+from django.dispatch import receiver
 from cms.models.titlemodels import EmptyTitle
 from cms.models.pagemodel import Page
 from cms.models.placeholdermodel import Placeholder
@@ -52,14 +54,14 @@ class Layout(models.Model):
         if exists:
             return exists[0]
         new_placeholder = Placeholder.objects.create(slot=slot)
-        layout_placeholder = LayoutPlaceholder.objects.create(
+        LayoutPlaceholder.objects.create(
             holder=new_placeholder, layout=self)
         return new_placeholder
 
     def get_title_obj(self):
         if hasattr(self.content_object, 'get_title_obj'):
             return self.content_object.get_title_obj()
-        return LayoutTitle
+        return LayoutTitle()
 
     def __unicode__(self):
         _type = 'Inherited from page'
@@ -78,7 +80,16 @@ class LayoutPlaceholder(models.Model):
     #   ones from the linked page will be rendered
     layout = models.ForeignKey(Layout, related_name='placeholders')
 
-    def delete(self):
-        holder_id = self.holder.id
-        super(LayoutPlaceholder, self).delete()
-        Placeholder.objects.filter(id=holder_id).delete()
+
+@receiver(signals.pre_delete, sender=LayoutPlaceholder)
+def mark_cms_placeholders_for_deletion(instance, **kwargs):
+    setattr(instance, '_delete_cms_phd_id', instance.holder_id)
+
+
+@receiver(signals.post_delete, sender=LayoutPlaceholder)
+def delete_marked_cms_placeholders(instance, **kwargs):
+    if hasattr(instance, '_delete_cms_phd_id'):
+        holder_id = getattr(instance, '_delete_cms_phd_id')
+        holder_qs = Placeholder.objects.filter(id=holder_id)[:1]
+        if holder_qs:
+             holder_qs[0].delete()

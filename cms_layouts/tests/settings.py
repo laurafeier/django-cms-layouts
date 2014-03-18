@@ -18,7 +18,8 @@ INSTALLED_APPS = [
     'cms_layouts.tests',
 ]
 
-CMS_TEMPLATES = [('page_template.html', 'page_template.html')]
+CMS_TEMPLATES = [('page_template.html', 'page_template.html'),
+                 ('page_no_extra_content.html', 'page_no_extra_content.html')]
 CMS_MODERATOR = False
 CMS_PERMISSION = True
 STATIC_ROOT = '/static/'

@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.shortcuts import get_object_or_404
+from django.forms.util import ErrorList
+from django.core.urlresolvers import reverse
 from cms.admin.placeholderadmin import PlaceholderAdmin
 from cms.utils import get_language_from_request
 from cms.utils.plugins import get_placeholders
@@ -8,16 +10,39 @@ from cms.forms.fields import PlaceholderFormField
 from cms.models.pluginmodel import CMSPlugin
 from .models import Layout
 from .forms import LayoutForm
-from .helpers import get_content_slot
+from .slot_finder import get_fixed_section_slots, MissingRequiredPlaceholder
 
 
 class LayoutAdmin(PlaceholderAdmin):
     form = LayoutForm
-    readonly_fields = ('from_page', 'content_object')
+    readonly_fields = ('page_used_by_this_layout',
+                       'object_that_uses_this_layout')
     fieldsets = (
         (None, {
-            'fields': ('from_page', 'content_object'),
+            'fields': ('page_used_by_this_layout',
+                       'object_that_uses_this_layout'),
+            'classes': ('extrapretty', 'wide', ),
         }),)
+
+    def _get_change_url(self, obj):
+        pattern = 'admin:%s_%s_change' % (obj._meta.app_label,
+                                          obj._meta.module_name)
+        url = reverse(pattern,  args=[obj.id])
+        url_tag = ("<a href='%s'>%s: %s</a>" % (
+            url, obj._meta.module_name, obj))
+        return url_tag
+
+    def object_that_uses_this_layout(self, layout):
+        if not layout.content_object:
+            return "(missing object)"
+        return self._get_change_url(layout.content_object)
+    object_that_uses_this_layout.allow_tags = True
+
+    def page_used_by_this_layout(self, layout):
+        if not layout.from_page:
+            return "(missing page)"
+        return self._get_change_url(layout.from_page)
+    page_used_by_this_layout.allow_tags = True
 
     def has_add_permission(self, request):
         return False
@@ -31,17 +56,18 @@ class LayoutAdmin(PlaceholderAdmin):
         """
         return {'add': False, 'change': False, 'delete': False, }
 
-    def _get_content_formfield(self, content_slot):
+    def _get_fixed_slot_formfield(self, section_name):
+        help_text = (
+            "<h3>This section will be populated with %s "
+            "from the object that uses this layout</h3>") % section_name
         content_field = PlaceholderFormField(
-            required = False,
-            help_text="<h3>This section will be populated with content "
-                      "from the object that uses this layout</h3>")
+            required=False, help_text=help_text)
         widget = content_field.widget
         widget.attrs['readonly'] = 'readonly'
         widget.attrs['style'] = 'display:none;'
         return content_field
 
-    def _get_placeholder_formfield(self, placeholder, language):
+    def _get_slot_formfield(self, placeholder, language):
         plugins = CMSPlugin.objects.filter(language=language,
             placeholder=placeholder, parent=None).order_by('position')
         from cms.plugin_pool import plugin_pool
@@ -57,28 +83,37 @@ class LayoutAdmin(PlaceholderAdmin):
 
     def _get_layout_placeholders_fields(self, request, layout):
         formfields = {}
-        page_language = get_language_from_request(request, layout.from_page)
+        lang = get_language_from_request(request, layout.from_page)
         # get placeholder slots from page template
         slots = get_placeholders(layout.from_page.get_template())
-        # content slot should not be editable
-        content_slot = get_content_slot(slots)
-        for slot in slots:
-            if content_slot and slot == content_slot:
-                formfield = self._get_content_formfield(content_slot)
-            else:
-                layout_placeholder = layout.get_or_create_placeholder(slot)
-                formfield = self._get_placeholder_formfield(
-                    layout_placeholder, page_language)
+
+        fixed_slots = get_fixed_section_slots(slots)
+        for fixed_section_name, fixed_slot_name in fixed_slots.items():
+            formfield = self._get_fixed_slot_formfield(fixed_section_name)
+            formfields[fixed_slot_name] = formfield
+
+        for slot in filter(lambda s: s not in formfields, slots):
+            layout_placeholder = layout.get_or_create_placeholder(slot)
+            formfield = self._get_slot_formfield(layout_placeholder, lang)
             formfields[slot] = formfield
+
         return formfields
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(LayoutAdmin, self).get_form(request, obj, **kwargs)
         if not obj:
             return form
-        formfields = self._get_layout_placeholders_fields(request, obj)
-        for slot, formfield in formfields.items():
-            form.base_fields[slot] = formfield
+        try:
+            formfields = self._get_layout_placeholders_fields(request, obj)
+        except MissingRequiredPlaceholder, e:
+            form.missing_required_placeholder_slot = ErrorList([
+                "This layout is missing a required placeholder named %s."
+                "Choose a different page for this layout that has the "
+                "required placeholder or just add this placeholder in the "
+                "page template." % (e.slot, )])
+        else:
+            form.missing_required_placeholder_slot = False
+            form.base_fields.update(formfields)
         return form
 
     def edit_plugin(self, request, plugin_id):

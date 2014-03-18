@@ -10,9 +10,16 @@ class MockLoader(BaseLoader):
             return ('{% load cms_tags %}|'
                     '{% page_attribute "page_title" %}|'
                     '{% placeholder "header" %}|'
+                    '{% placeholder "extra-page-content" %}|'
                     '{% placeholder "some-content" %}|'
                     '{% placeholder "footer" %}', 'page_template.html')
-        elif template_name == '404.html':
+        if template_name == 'page_no_extra_content.html':
+            return ('{% load cms_tags %}|'
+                    '{% page_attribute "page_title" %}|'
+                    '{% placeholder "header" %}|'
+                    '{% placeholder "some-content" %}|'
+                    '{% placeholder "footer" %}', 'page_template.html')
+        if template_name == '404.html':
             return "404 Not Found", "404.html"
         else:
             raise TemplateDoesNotExist()

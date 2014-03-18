@@ -9,12 +9,10 @@ from cms.forms.widgets import PluginEditor
 from cms.forms.fields import PlaceholderFormField
 from cms.models.pluginmodel import CMSPlugin
 from .models import Layout
-from .forms import LayoutForm
 from .slot_finder import get_fixed_section_slots, MissingRequiredPlaceholder
 
 
 class LayoutAdmin(PlaceholderAdmin):
-    form = LayoutForm
     readonly_fields = ('page_used_by_this_layout',
                        'object_that_uses_this_layout')
     fieldsets = (

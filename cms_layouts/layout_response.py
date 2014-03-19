@@ -4,10 +4,11 @@ from django.http import HttpResponseNotFound
 from cms.models.pagemodel import Page
 from cms.models.titlemodels import EmptyTitle
 from cms.models.placeholdermodel import Placeholder
-from cms.utils import get_template_from_request
+from cms.utils import get_template_from_request, get_language_from_request
 from cms.utils.plugins import get_placeholders
 from cms.plugins.utils import get_plugins
-from .slot_finder import get_fixed_section_slots, MissingRequiredPlaceholder
+from .slot_finder import (
+    get_fixed_section_slots, MissingRequiredPlaceholder, get_mock_placeholder)
 
 
 class LayoutResponse:
@@ -42,7 +43,8 @@ class LayoutResponse:
                     extra_html = getattr(self.content_object, extra_html_attr)
                     setattr(placeholder, '_extra_html', extra_html)
             else:
-                placeholder = Placeholder()
+                placeholder = get_mock_placeholder(
+                    get_language_from_request(self.request))
             fixed_content[slot_found] = placeholder
         return fixed_content
 

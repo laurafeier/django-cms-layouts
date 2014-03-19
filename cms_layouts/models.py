@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.urlresolvers import reverse
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
@@ -48,6 +49,9 @@ class Layout(models.Model):
         if self.from_page:
             return self.from_page.site
         return Site.objects.get_current()
+
+    def get_absolute_url(self):
+        return reverse('admin:cms_layouts-layout-preview', args=[self.id])
 
     def get_or_create_placeholder(self, slot):
         exists = self.hidden_placeholders.filter(slot=slot)[:1]

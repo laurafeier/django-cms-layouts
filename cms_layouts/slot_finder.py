@@ -1,4 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
+from cms.models import Placeholder
+from cms.plugins.text.models import Text
 from .settings import FIXED_PLACEHOLDERS
 import difflib
 
@@ -10,6 +12,19 @@ class MissingRequiredPlaceholder(Exception):
 
     def __str__(self):
         return repr(self.slot)
+
+
+def get_mock_placeholder(lang):
+    """
+    Returns a placeholder instance with a text plugin that can be used for
+        rendering a layout.
+    """
+    mock_placeholder = Placeholder()
+    mock_plugin = Text(body='Fixed content')
+    mock_plugin.plugin_type = 'TextPlugin'
+    mock_plugin.placeholder_id = mock_plugin.pk = 1
+    setattr(mock_placeholder, '_%s_plugins_cache' % lang, [mock_plugin])
+    return mock_placeholder
 
 
 def get_fixed_section_slots(slots):

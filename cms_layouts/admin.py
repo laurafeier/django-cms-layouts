@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.shortcuts import get_object_or_404
+from django.conf.urls.defaults import patterns, url
 from django.forms.util import ErrorList
 from django.core.urlresolvers import reverse
 from cms.admin.placeholderadmin import PlaceholderAdmin
@@ -7,9 +8,18 @@ from cms.utils import get_language_from_request
 from cms.utils.plugins import get_placeholders
 from cms.forms.widgets import PluginEditor
 from cms.forms.fields import PlaceholderFormField
-from cms.models.pluginmodel import CMSPlugin
+from cms.models import CMSPlugin
 from .models import Layout
-from .slot_finder import get_fixed_section_slots, MissingRequiredPlaceholder
+from .slot_finder import (
+    get_fixed_section_slots, MissingRequiredPlaceholder, get_mock_placeholder)
+from .layout_response import LayoutResponse
+
+
+class PreviewPage(object):
+
+    def __init__(self, lang):
+        placeholder = get_mock_placeholder(lang)
+        self.content = self.header = placeholder
 
 
 class LayoutAdmin(PlaceholderAdmin):
@@ -21,6 +31,21 @@ class LayoutAdmin(PlaceholderAdmin):
                        'object_that_uses_this_layout'),
             'classes': ('extrapretty', 'wide', ),
         }),)
+
+    def get_urls(self):
+        urls = super(LayoutAdmin, self).get_urls()
+        url_patterns = patterns('',
+            url(r'^(?P<layout_id>\d+)/preview/$',
+                self.admin_site.admin_view(self.layout_preview),
+                name='cms_layouts-layout-preview'), )
+        url_patterns.extend(urls)
+        return url_patterns
+
+    def layout_preview(self, request, layout_id):
+        layout = get_object_or_404(Layout, id=layout_id)
+        new_obj = PreviewPage(get_language_from_request(request))
+        layout_response = LayoutResponse(new_obj, layout, request)
+        return layout_response.make_response()
 
     def _get_change_url(self, obj):
         pattern = 'admin:%s_%s_change' % (obj._meta.app_label,

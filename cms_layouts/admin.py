@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from django.conf.urls.defaults import patterns, url
 from django.forms.util import ErrorList
 from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext_lazy as _
 from cms.admin.placeholderadmin import PlaceholderAdmin
 from cms.utils import get_language_from_request
 from cms.utils.plugins import get_placeholders
@@ -26,10 +27,11 @@ class LayoutAdmin(PlaceholderAdmin):
     readonly_fields = ('page_used_by_this_layout',
                        'object_that_uses_this_layout')
     fieldsets = (
-        (None, {
+        (_('Layout Configuration'), {
             'fields': ('page_used_by_this_layout',
                        'object_that_uses_this_layout'),
             'classes': ('extrapretty', 'wide', ),
+            'description': _('Layout Setup Description')
         }),)
 
     def get_urls(self):

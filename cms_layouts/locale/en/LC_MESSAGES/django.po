@@ -1,0 +1,37 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-03-19 11:14+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: admin.py:30
+msgid "Layout Configuration"
+msgstr ""
+
+#: admin.py:34
+msgid "Layout Setup Description"
+msgstr ""
+"The layout tool follows the same principle as page inheritance: the "
+"placeholders will be filled with the smart snippets and plugins from a "
+"selected page, unless you specifically override a placeholder with a new "
+"smart snippet or plugin. Select a page from which to inherit existing "
+"template placeholders, and the smart snippets and plugins that fill those "
+"placeholders. Selection can be done through the change view of the object"
+"that uses this layout. For most sites, selecting the site's master page "
+"will pull in the placeholders that make up the header, footer, and right"
+" rail for a site. </br> <b>NOTE</b>: Because of the way blogs, the "
+"extra-page-content and main-content placeholders will be filled "
+"programmatically with content, and are not available for smart snippets "
+"and plugins."

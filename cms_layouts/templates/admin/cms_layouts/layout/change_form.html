@@ -1,9 +1,15 @@
 {% extends 'admin/change_form.html' %}
+{% load i18n %}
 
 {% block form_top %}
 {% if adminform.form.missing_required_placeholder_slot %}
     {{adminform.form.missing_required_placeholder_slot}}
 {% endif %}
+{% endblock %}
+
+{% block object-tools-items %}
+    <li><a href="history/" class="historylink">{% trans "History" %}</a></li>
+    {% if has_absolute_url %}<li><a href="{{original.get_absolute_url}}" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
 {% endblock %}
 
 

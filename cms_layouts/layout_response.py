@@ -4,11 +4,10 @@ from django.http import HttpResponseNotFound
 from cms.models.pagemodel import Page
 from cms.models.titlemodels import EmptyTitle
 from cms.models.placeholdermodel import Placeholder
-from cms.utils import get_template_from_request, get_language_from_request
 from cms.utils.plugins import get_placeholders
 from cms.plugins.utils import get_plugins
 from .slot_finder import (
-    get_fixed_section_slots, MissingRequiredPlaceholder, get_mock_placeholder)
+    get_fixed_section_slots, MissingRequiredPlaceholder)
 
 
 class LayoutResponse:
@@ -42,10 +41,7 @@ class LayoutResponse:
                 if hasattr(self.content_object, extra_html_attr):
                     extra_html = getattr(self.content_object, extra_html_attr)
                     setattr(placeholder, '_extra_html', extra_html)
-            else:
-                placeholder = get_mock_placeholder(
-                    get_language_from_request(self.request))
-            fixed_content[slot_found] = placeholder
+                fixed_content[slot_found] = placeholder
         return fixed_content
 
     def _cache_plugins_for_placeholder(self, placeholder):
@@ -109,8 +105,7 @@ class LayoutResponse:
         # don't allow cms toolbar
         setattr(self.request, 'toolbar', False)
         setattr(self.request, 'current_page', current_page)
-        template_to_render = get_template_from_request(
-            self.request, current_page, no_current_page=True)
+        template_to_render = current_page.get_template()
         return render_to_response(
             template_to_render, RequestContext(self.request))
 

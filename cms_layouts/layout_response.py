@@ -37,10 +37,14 @@ class LayoutResponse:
                     raise HttpResponseNotFound(
                         "<h1>Cannot find content for this layout</h1>")
                 # get extra html for header/content
-                extra_html_attr = 'extra_html_%s' % section_name
-                if hasattr(self.content_object, extra_html_attr):
-                    extra_html = getattr(self.content_object, extra_html_attr)
-                    setattr(placeholder, '_extra_html', extra_html)
+                before_html_attr = 'extra_html_before_%s' % section_name
+                after_html_attr = 'extra_html_after_%s' % section_name
+                if hasattr(self.content_object, before_html_attr):
+                    extra_html = getattr(self.content_object, before_html_attr)
+                    setattr(placeholder, '_extra_html_before', extra_html)
+                if hasattr(self.content_object, after_html_attr):
+                    extra_html = getattr(self.content_object, after_html_attr)
+                    setattr(placeholder, '_extra_html_after', extra_html)
                 fixed_content[slot_found] = placeholder
         return fixed_content
 

@@ -14,15 +14,15 @@ class MissingRequiredPlaceholder(Exception):
         return repr(self.slot)
 
 
-def get_mock_placeholder(lang):
+def get_mock_placeholder(lang, html_content=None):
     """
     Returns a placeholder instance with a text plugin that can be used for
         rendering a layout.
     """
     mock_placeholder = Placeholder()
-    mock_plugin = Text(body='Fixed content')
+    mock_plugin = Text(body=(html_content or 'Fixed content'))
     mock_plugin.plugin_type = 'TextPlugin'
-    mock_plugin.placeholder_id = mock_plugin.pk = 1
+    mock_plugin.placeholder_id = mock_plugin.pk = 0
     setattr(mock_placeholder, '_%s_plugins_cache' % lang, [mock_plugin])
     return mock_placeholder
 

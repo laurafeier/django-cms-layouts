@@ -1,21 +1,24 @@
 from django.template.context import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponseNotFound
+from cms.utils import get_language_from_request
 from cms.models.pagemodel import Page
 from cms.models.titlemodels import EmptyTitle
 from cms.models.placeholdermodel import Placeholder
 from cms.utils.plugins import get_placeholders
 from cms.plugins.utils import get_plugins
 from .slot_finder import (
-    get_fixed_section_slots, MissingRequiredPlaceholder)
+    get_fixed_section_slots, MissingRequiredPlaceholder, get_mock_placeholder)
 
 
 class LayoutResponse:
 
-    def __init__(self, object_for_layout, layout, request, title=None):
+    def __init__(self, object_for_layout, layout, request,
+                 context=None, title=None):
         self.content_object = object_for_layout
         self.layout = layout
         self.request = request
+        self.context = context or RequestContext(request)
         self.title = title or self._get_title_for_context()
 
     def _get_title_for_context(self):
@@ -24,26 +27,49 @@ class LayoutResponse:
             return self.content_object.get_title_obj()
         return self.layout.get_title_obj()
 
+    def _call_render(self, method_name):
+        return getattr(self.content_object, method_name)(
+            self.request, self.context)
+
+    def _wrap_in_placeholder(self, method_name):
+        return get_mock_placeholder(get_language_from_request(self.request),
+                                    self._call_render(method_name))
+
     def _get_fixed_slots(self, slots):
         fixed_content = {}
         fixed_sections = get_fixed_section_slots(slots)
-        # section_name need to be propeties named header/content and need to
-        #   return a placeholder instance
+        # section_name need to be either properties named header/content that
+        #   return a placeholder instance or methods named
+        #   render_header/render_content(with request&context params) that will
+        #   return html code; the html will be set in a mock placeholder as
+        #   a text plugin html
         for section_name, slot_found in fixed_sections.items():
-            if hasattr(self.content_object, section_name):
+            method_name = "render_%s" % section_name
+            if (hasattr(self.content_object, section_name) or
+                hasattr(self.content_object, method_name)):
+
                 # get content/header placeholder
-                placeholder = getattr(self.content_object, section_name)
+                placeholder = (
+                    getattr(self.content_object, section_name, None) or
+                    self._wrap_in_placeholder(method_name))
+
                 if not isinstance(placeholder, Placeholder):
                     raise HttpResponseNotFound(
                         "<h1>Cannot find content for this layout</h1>")
                 # get extra html for header/content
                 before_html_attr = 'extra_html_before_%s' % section_name
                 after_html_attr = 'extra_html_after_%s' % section_name
+
                 if hasattr(self.content_object, before_html_attr):
                     extra_html = getattr(self.content_object, before_html_attr)
+                    if callable(extra_html):
+                        extra_html = self._call_render(before_html_attr)
                     setattr(placeholder, '_extra_html_before', extra_html)
+
                 if hasattr(self.content_object, after_html_attr):
                     extra_html = getattr(self.content_object, after_html_attr)
+                    if callable(extra_html):
+                        extra_html = self._call_render(after_html_attr)
                     setattr(placeholder, '_extra_html_after', extra_html)
                 fixed_content[slot_found] = placeholder
         return fixed_content
@@ -111,5 +137,5 @@ class LayoutResponse:
         setattr(self.request, 'current_page', current_page)
         template_to_render = current_page.get_template()
         return render_to_response(
-            template_to_render, RequestContext(self.request))
+            template_to_render, self.context)
 

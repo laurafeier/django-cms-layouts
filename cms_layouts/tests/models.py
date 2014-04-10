@@ -8,7 +8,9 @@ class Article(models.Model):
 
     title = models.CharField('title', max_length=50)
     content = PlaceholderField('content', related_name='article_entry_content')
-    header = PlaceholderField('header', related_name='article_entry_header')
+
+    def render_header(self, request, context):
+        return 'articleHeader'
 
     def get_title_obj(self):
         article_title = LayoutTitle()
@@ -26,8 +28,6 @@ class Article(models.Model):
     def delete(self):
         if self.content_id:
             self._delete_placeholder(self.content)
-        if self.header_id:
-            self._delete_placeholder(self.header)
         super(Article, self).delete()
 
     layouts = GenericRelation(Layout)

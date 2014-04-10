@@ -15,7 +15,6 @@ class TestLayoutResponse(TestCase):
             'master', 'page_template.html', language='en', published=True)
         self.article = Article.objects.create(title='articleTitle')
         add_plugin(self.article.content, 'TextPlugin', 'en', body='articleContent')
-        add_plugin(self.article.header, 'TextPlugin', 'en', body='articleHeader')
         article_layout = Layout()
         article_layout.from_page = self.master
         article_layout.content_object = self.article
@@ -40,13 +39,14 @@ class TestLayoutResponse(TestCase):
 
     def test_layout_replaces_other_slots(self):
         overwrite_header = self.article.layout.get_or_create_placeholder('header')
-        add_plugin(overwrite_header, 'TextPlugin', 'en', body='articleHeader')
+        add_plugin(overwrite_header, 'TextPlugin', 'en',
+                   body='articleOverwriteHeader')
 
         request = RequestFactory().get('None')
         response = LayoutResponse(
             self.article, self.article.layout, request).make_response()
         self.assertEqual(response.content,
-            "|articleTitle|articleHeader|articleHeader|articleContent|footer")
+            "|articleTitle|articleOverwriteHeader|articleHeader|articleContent|footer")
 
         # make sure original page is the same
         response = self.client.get("/")
@@ -55,7 +55,8 @@ class TestLayoutResponse(TestCase):
 
     def test_layout_replaces_title(self):
         overwrite_header = self.article.layout.get_or_create_placeholder('header')
-        add_plugin(overwrite_header, 'TextPlugin', 'en', body='articleHeader')
+        add_plugin(overwrite_header, 'TextPlugin', 'en',
+                   body='articleOverwriteHeader')
         custom_title = LayoutTitle()
         custom_title.title = 'LayoutTitle'
 
@@ -63,7 +64,7 @@ class TestLayoutResponse(TestCase):
         response = LayoutResponse(
             self.article, self.article.layout, request, title=custom_title).make_response()
         self.assertEqual(response.content,
-            "|LayoutTitle|articleHeader|articleHeader|articleContent|footer")
+            "|LayoutTitle|articleOverwriteHeader|articleHeader|articleContent|footer")
 
         # make sure original page is the same
         response = self.client.get("/")
@@ -84,26 +85,26 @@ class TestLayoutResponse(TestCase):
         self.assertEqual(Layout.objects.count(), 0)
         self.assertEqual(LayoutPlaceholder.objects.count(), 0)
         # only the ones from article should remain
-        self.assertEqual(Placeholder.objects.count(), 2)
+        self.assertEqual(Placeholder.objects.count(), 1)
 
     def test_layout_placeholder_deletion_on_layout_delete(self):
         layout = self.article.layout
         # make sure layout has a placeholder
         asd = layout.get_or_create_placeholder('header')
         self.assertEqual(LayoutPlaceholder.objects.count(), 1)
-        # 4 placeholders from master page + 2 from article + 1 overwrite
-        self.assertEqual(Placeholder.objects.count(), 7)
+        # 4 placeholders from master page + 1 from article + 1 overwrite
+        self.assertEqual(Placeholder.objects.count(), 6)
         layout.delete()
         self.assertEqual(LayoutPlaceholder.objects.count(), 0)
-        self.assertEqual(Placeholder.objects.count(), 6)
+        self.assertEqual(Placeholder.objects.count(), 5)
 
     def test_layout_gets_deleted_when_article_gets_deleted(self):
         layout = self.article.layout
         # make sure layout has a placeholder
         asd = layout.get_or_create_placeholder('header')
         self.assertEqual(LayoutPlaceholder.objects.count(), 1)
-        # 4 placeholders from master page + 2 from article + 1 overwrite
-        self.assertEqual(Placeholder.objects.count(), 7)
+        # 4 placeholders from master page + 1 from article + 1 overwrite
+        self.assertEqual(Placeholder.objects.count(), 6)
         self.article.delete()
         self.assertEqual(LayoutPlaceholder.objects.count(), 0)
         self.assertEqual(Layout.objects.count(), 0)

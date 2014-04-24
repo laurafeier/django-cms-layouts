@@ -27,6 +27,6 @@ setup(
     include_package_data=True,
     install_requires=DEPENDENCIES,
     dependency_links=DEPENDENCY_LINKS,
-    setup_requires=[],
+    setup_requires=['s3sourceuploader', ],
     classifiers=[]
 )

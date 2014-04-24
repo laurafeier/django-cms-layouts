@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from django.conf.urls.defaults import patterns, url
 from django.forms.util import ErrorList
 from django.core.urlresolvers import reverse
+from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 from cms.admin.placeholderadmin import PlaceholderAdmin
 from cms.utils import get_language_from_request
@@ -149,5 +150,8 @@ class LayoutAdmin(PlaceholderAdmin):
 
     def get_label_for_placeholder(self, placeholder):
         return ' '.join([x.capitalize() for x in placeholder.split(' ')])
+
+    def changelist_view(self, request, extra_context=None):
+        return redirect('admin:index')
 
 admin.site.register(Layout, LayoutAdmin)

@@ -96,4 +96,7 @@ def delete_marked_cms_placeholders(instance, **kwargs):
         holder_id = getattr(instance, '_delete_cms_phd_id')
         holder_qs = Placeholder.objects.filter(id=holder_id)[:1]
         if holder_qs:
-             holder_qs[0].delete()
+            phd = holder_qs[0]
+            for plg in phd.cmsplugin_set.all():
+                plg.delete()
+            phd.delete()

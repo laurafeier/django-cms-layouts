@@ -53,21 +53,23 @@ class LayoutAdmin(PlaceholderAdmin):
     def _get_change_url(self, obj):
         pattern = 'admin:%s_%s_change' % (obj._meta.app_label,
                                           obj._meta.module_name)
-        url = reverse(pattern,  args=[obj.id])
+        return reverse(pattern,  args=[obj.id])
+
+    def _get_change_url_tag(self, obj):
         url_tag = ("<a href='%s'>%s: %s</a>" % (
-            url, obj._meta.module_name, obj))
+            self._get_change_url(obj), obj._meta.module_name, obj))
         return url_tag
 
     def object_that_uses_this_layout(self, layout):
         if not layout.content_object:
             return "(missing object)"
-        return self._get_change_url(layout.content_object)
+        return self._get_change_url_tag(layout.content_object)
     object_that_uses_this_layout.allow_tags = True
 
     def page_used_by_this_layout(self, layout):
         if not layout.from_page:
             return "(missing page)"
-        return self._get_change_url(layout.from_page)
+        return self._get_change_url_tag(layout.from_page)
     page_used_by_this_layout.allow_tags = True
 
     def has_add_permission(self, request):
@@ -129,6 +131,8 @@ class LayoutAdmin(PlaceholderAdmin):
         form = super(LayoutAdmin, self).get_form(request, obj, **kwargs)
         if not obj:
             return form
+        form.layout_obj_change_url = self._get_change_url(obj.content_object)
+        form.layout_obj_model = obj.content_object._meta.module_name
         try:
             formfields = self._get_layout_placeholders_fields(request, obj)
         except MissingRequiredPlaceholder, e:

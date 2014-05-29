@@ -30,7 +30,8 @@ class Layout(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
     # should be used to identify different types of layouts for the same object
     layout_type = models.IntegerField(default=0)
-    # keep link to the page from which this layout pulls template & placeholders
+    # keep link to the page from which this layout pulls
+    #   template & placeholders
     from_page = models.ForeignKey(Page)
 
     def layout_type_display(self):

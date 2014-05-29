@@ -37,7 +37,8 @@ class LayoutAdmin(PlaceholderAdmin):
 
     def get_urls(self):
         urls = super(LayoutAdmin, self).get_urls()
-        url_patterns = patterns('',
+        url_patterns = patterns(
+            '',
             url(r'^(?P<layout_id>\d+)/preview/$',
                 self.admin_site.admin_view(self.layout_preview),
                 name='cms_layouts-layout-preview'), )
@@ -96,8 +97,9 @@ class LayoutAdmin(PlaceholderAdmin):
         return content_field
 
     def _get_slot_formfield(self, placeholder, language):
-        plugins = CMSPlugin.objects.filter(language=language,
-            placeholder=placeholder, parent=None).order_by('position')
+        plugins = CMSPlugin.objects.filter(
+            language=language, placeholder=placeholder, parent=None
+        ).order_by('position')
         from cms.plugin_pool import plugin_pool
         editor = PluginEditor(attrs={
             'installed': plugin_pool.get_all_plugins(),

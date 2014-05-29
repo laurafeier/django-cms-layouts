@@ -31,7 +31,7 @@ def get_fixed_section_slots(slots):
     fixed_from_slots = {}
     for section, slot_data in FIXED_PLACEHOLDERS.items():
         fixed_slot_name, finder_kw = slot_data
-        find_func =  get_finder(finder_kw)
+        find_func = get_finder(finder_kw)
         fixed_from_slots[section] = find_func(slots, fixed_slot_name)
     return fixed_from_slots
 

@@ -14,7 +14,8 @@ class TestLayoutResponse(TestCase):
         self.master = create_page(
             'master', 'page_template.html', language='en', published=True)
         self.article = Article.objects.create(title='articleTitle')
-        add_plugin(self.article.content, 'TextPlugin', 'en', body='articleContent')
+        add_plugin(
+            self.article.content, 'TextPlugin', 'en', body='articleContent')
         article_layout = Layout()
         article_layout.from_page = self.master
         article_layout.content_object = self.article
@@ -34,7 +35,8 @@ class TestLayoutResponse(TestCase):
         request = RequestFactory().get('None')
         response = LayoutResponse(
             self.article, self.article.layout, request).make_response()
-        self.assertEqual(response.content,
+        self.assertEqual(
+            response.content,
             '|articleTitle|header|articleHeader|articleContent|footer')
 
     def test_layout_replaces_other_slots(self):
@@ -45,7 +47,8 @@ class TestLayoutResponse(TestCase):
         request = RequestFactory().get('None')
         response = LayoutResponse(
             self.article, self.article.layout, request).make_response()
-        self.assertEqual(response.content,
+        self.assertEqual(
+            response.content,
             "|articleTitle|articleOverwriteHeader|articleHeader|articleContent|footer")
 
         # make sure original page is the same
@@ -62,7 +65,8 @@ class TestLayoutResponse(TestCase):
 
         request = RequestFactory().get('None')
         response = LayoutResponse(
-            self.article, self.article.layout, request, title=custom_title).make_response()
+            self.article, self.article.layout, request, title=custom_title
+        ).make_response()
         self.assertEqual(response.content,
             "|LayoutTitle|articleOverwriteHeader|articleHeader|articleContent|footer")
 

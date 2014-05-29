@@ -2,8 +2,6 @@ from django.template.context import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponseNotFound
 from cms.utils import get_language_from_request
-from cms.models.pagemodel import Page
-from cms.models.titlemodels import EmptyTitle
 from cms.models.placeholdermodel import Placeholder
 from cms.utils.plugins import get_placeholders
 from cms.plugins.utils import get_plugins
@@ -11,7 +9,7 @@ from .slot_finder import (
     get_fixed_section_slots, MissingRequiredPlaceholder, get_mock_placeholder)
 
 
-class LayoutResponse:
+class LayoutResponse(object):
 
     def __init__(self, object_for_layout, layout, request,
                  context=None, title=None):
@@ -46,7 +44,7 @@ class LayoutResponse:
         for section_name, slot_found in fixed_sections.items():
             method_name = "render_%s" % section_name
             if (hasattr(self.content_object, section_name) or
-                hasattr(self.content_object, method_name)):
+                    hasattr(self.content_object, method_name)):
 
                 # get content/header placeholder
                 placeholder = (
@@ -138,4 +136,3 @@ class LayoutResponse:
         template_to_render = current_page.get_template()
         return render_to_response(
             template_to_render, self.context)
-

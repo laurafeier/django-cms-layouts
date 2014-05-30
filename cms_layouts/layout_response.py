@@ -54,7 +54,7 @@ class LayoutResponse(object):
                     raise HttpResponseNotFound(
                         "<h1>Cannot find content for this layout</h1>")
                 # get extra html for header/content
-                for exta_attr in ('extra_html_before', 'extra_html_after'):
+                for extra_attr in ('extra_html_before', 'extra_html_after'):
                     section_attr = extra_attr + "_" + section_name
                     html = getattr(self.content_object, section_attr, None)
                     if html is None:
@@ -62,7 +62,7 @@ class LayoutResponse(object):
                     if callable(html):
                         html = self._call_render(section_attr)
                     # set attribute for the plugins context processor
-                    context_processor_attr = "_" + exta_attr
+                    context_processor_attr = "_" + extra_attr
                     setattr(placeholder, context_processor_attr, html)
 
                 fixed_content[slot_found] = placeholder

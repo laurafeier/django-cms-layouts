@@ -45,7 +45,6 @@ class LayoutResponse(object):
             method_name = "render_%s" % section_name
             if (hasattr(self.content_object, section_name) or
                     hasattr(self.content_object, method_name)):
-
                 # get content/header placeholder
                 placeholder = (
                     getattr(self.content_object, section_name, None) or
@@ -55,20 +54,17 @@ class LayoutResponse(object):
                     raise HttpResponseNotFound(
                         "<h1>Cannot find content for this layout</h1>")
                 # get extra html for header/content
-                before_html_attr = 'extra_html_before_%s' % section_name
-                after_html_attr = 'extra_html_after_%s' % section_name
+                for exta_attr in ('extra_html_before', 'extra_html_after'):
+                    section_attr = extra_attr + "_" + section_name
+                    html = getattr(self.content_object, section_attr, None)
+                    if html is None:
+                        continue
+                    if callable(html):
+                        html = self._call_render(section_attr)
+                    # set attribute for the plugins context processor
+                    context_processor_attr = "_" + exta_attr
+                    setattr(placeholder, context_processor_attr, html)
 
-                if hasattr(self.content_object, before_html_attr):
-                    extra_html = getattr(self.content_object, before_html_attr)
-                    if callable(extra_html):
-                        extra_html = self._call_render(before_html_attr)
-                    setattr(placeholder, '_extra_html_before', extra_html)
-
-                if hasattr(self.content_object, after_html_attr):
-                    extra_html = getattr(self.content_object, after_html_attr)
-                    if callable(extra_html):
-                        extra_html = self._call_render(after_html_attr)
-                    setattr(placeholder, '_extra_html_after', extra_html)
                 fixed_content[slot_found] = placeholder
         return fixed_content
 
@@ -108,6 +104,11 @@ class LayoutResponse(object):
             setattr(placeholder, 'page', page)
             self._cache_plugins_for_placeholder(placeholder)
             placeholder_cache[page.pk][slot] = placeholder
+        # set the placeholders on the current page before django-cms does.
+        # this variable name is used by cms to hold placeholders with all
+        #   plugins. By setting this variable before cms, we ensure that cms
+        #   will not cache the `real` page placeholders and will use the ones
+        #   we set
         setattr(page, '_tmp_placeholders_cache', placeholder_cache)
         return page
 

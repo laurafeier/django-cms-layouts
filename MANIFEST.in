@@ -1,0 +1,5 @@
+include README.md
+recursive-include cms_layouts/fixtures *
+recursive-include cms_layouts/static *
+recursive-include cms_layouts/templates *.html
+recursive-include cms_layouts/locale *

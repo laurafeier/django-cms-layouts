@@ -1,0 +1,44 @@
+{% extends 'admin/change_form.html' %}
+{% load i18n %}
+
+{% block form_top %}
+{% if adminform.form.missing_required_placeholder_slot %}
+    {{adminform.form.missing_required_placeholder_slot}}
+{% endif %}
+{% endblock %}
+
+{% block extrastyle %}
+{{block.super}}
+<style type="text/css">
+div.submit-row a.default {
+    border: 2px solid #5b80b2;
+    background: #7CA0C7 url({{STATIC_URL}}admin/img/default-bg.gif) bottom repeat-x;
+    font-weight: bold;
+    color: white;
+    float: right;
+    margin: 0 0 0 5px;
+    padding: 3px 5px;
+    white-space: pre;
+}
+</style>
+{% endblock %}
+
+{% block object-tools-items %}
+    <li><a href="history/" class="historylink">{% trans "History" %}</a></li>
+    {% if has_absolute_url %}<li><a href="{{original.get_absolute_url}}" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
+{% endblock %}
+
+{% block field_sets %}
+{% for fieldset in adminform %}
+  {% include "admin/includes/fieldset.html" %}
+  {% if forloop.first or forloop.last %}
+    <div class="submit-row">
+    <a class='default' href="{{adminform.form.layout_obj_change_url}}">Save and go back to {{adminform.form.layout_obj_model}}</a>
+    </div>
+  {% endif %}
+{% endfor %}
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+<!-- no need for submission -->
+{% endblock %}

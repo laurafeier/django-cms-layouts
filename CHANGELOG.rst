@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+Revision 07a3aa2 (08.07.2014, 10:04 UTC)
+----------------------------------------
+
+* LUN-1677
+
+  * dissmiss window if it's opened in a popup
+
+No other commits.
+
 Revision d18e841 (23.06.2014, 08:13 UTC)
 ----------------------------------------
 

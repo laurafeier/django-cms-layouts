@@ -16,7 +16,7 @@ DEPENDENCY_LINKS = []
 
 setup(
     name='django-cms-layouts',
-    version='0.1',
+    version='0.1.1',
     description='Layer over django-cms that allows to create layouts '
                 'which can be used to render existing CMS pages with '
                 'different content.',

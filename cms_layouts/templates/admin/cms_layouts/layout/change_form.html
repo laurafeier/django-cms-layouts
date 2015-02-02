@@ -33,7 +33,7 @@ div.submit-row a.default {
   {% include "admin/includes/fieldset.html" %}
   {% if forloop.first or forloop.last %}
     <div class="submit-row">
-    <a class='default' href="{{adminform.form.layout_obj_change_url}}">Save and go back to {{adminform.form.layout_obj_model}}</a>
+    <a class='default' {% if is_popup %}onclick="window.close();" {% else %}href="{{adminform.form.layout_obj_change_url}}"{% endif %}>Save and go back to {{adminform.form.layout_obj_model}}</a>
     </div>
   {% endif %}
 {% endfor %}
